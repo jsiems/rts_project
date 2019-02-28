@@ -1,0 +1,119 @@
+%a4paper size
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[margin=1in]{geometry}         % for margin
+\usepackage{graphicx}                     % for images
+\usepackage[toc,page]{appendix}
+\usepackage{fancyhdr}                     %for page number in bottom right
+\usepackage{listings}                     % for code blocks
+\usepackage{color}                        % for colored code blocks ;)
+\usepackage{fixltx2e}                     % for text subscripts
+\usepackage[T1]{fontenc}                  % ensures < appear correctly
+\usepackage{lmodern}                      % same as above
+\usepackage{float}                        % makes figures STAY
+\usepackage{minted}                       % used for reading code from file
+
+\graphicspath{{images/}}
+
+\setlength{\parindent}{0pt}
+
+% code block rules
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+%TITLE n such
+\title{Real Time Systems used in Video Games}
+\author{Joshua Siems}
+\date{\today}
+
+%Page numbering in bottom right
+\pagestyle{fancy}
+%clear header and footer
+\fancyhead{}
+\fancyfoot{}
+%get rid of annoying horizontal line
+\renewcommand{\headrulewidth}{0pt}
+%do what i HWANT
+\fancyfoot[R]{\thepage}
+
+%BEGIN DOCUMENT
+\begin{document}
+
+\pagenumbering{gobble}
+
+\maketitle
+
+\newpage
+
+    \tableofcontents
+
+\newpage
+
+\pagenumbering{arabic}
+
+\section{Motivation}
+
+\newpage
+
+\section{Background}
+
+\newpage
+
+\section{Procedure}
+
+\newpage
+
+\section{Problems Encountered}
+
+\newpage
+
+\section{Testing}
+
+\newpage
+
+\section{Results}
+
+\newpage
+
+\section{Questions}
+
+\newpage
+
+\section{Conclusion}
+
+\newpage
+
+\begin{appendices}
+
+\section{main.c}
+%    \inputminted{c}{../main.c}
+
+\end{appendices}
+
+\end{document}
+
+
+
+
+
+
+

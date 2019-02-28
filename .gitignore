@@ -1,0 +1,10 @@
+main
+*.log
+*.aux
+*.pdf
+*.o
+*.swp
+*.lof
+*.lot
+*.toc
+_minted*
