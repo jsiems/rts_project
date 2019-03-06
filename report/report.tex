@@ -42,7 +42,7 @@
 }
 
 %TITLE n such
-\title{Real Time Systems used in Video Games}
+\title{Real-Time Systems used in Video Games}
 \author{Joshua Siems}
 \date{\today}
 
@@ -63,38 +63,106 @@
 
 \maketitle
 
-\newpage
-
-    \tableofcontents
-
-\newpage
-
 \pagenumbering{arabic}
 
 \section{Introduction}
-
-\newpage
-
-\section{Background}
-
-\newpage
+    A real-time system is a system that must perform specified tasks within a well-defined time constraint. For example, a microcontroller which must read inputs and produce outputs based on the inputs within a certain amount of time would be known as a real-time system. Another kind of real-time system is a video game. Video games would fall under the soft real-time system category. This means that, unlike a hard real-time system, where a missed deadline results in a fatal error, a soft-real time system still cares about the result of an operation even if the deadline is missed. This paper will discuss how video games are soft real-time systems, and will layout a plan for developing a new kind of priority based task execution feature for video games. 
 
 \section{Literature Review}
-    \subsection{Could be a subsection of background, I think it would fit nicely there}
 
-\newpage
+    \subsection{Video Games as Real-Time Systems}
+         A video game must process user inputs, update game variables and update the screen. This must all be completed in a very short amount of time in order to produce the illusion of movement to the user. See Figure \ref{update_cycle} for a simple example of a game loop.
+         \\
+         EDIT THIS IMAGE MAKE IT SMALLER
+
+        \begin{figure}[H]
+            \includegraphics[width=12cm]{game_loop_simple.png}
+            \centering
+            \caption{Simple Game Loop}
+            \label{update_cycle}
+        \end{figure}
+
+        In order to create this illusion of movement, the game must meet a target framerate. In the movie world, the industry standard is 24 frames per second. For video games, the targets are much higher. Most games aim to produce at least thirty frames per second, with many more games targetting sixty frames per second. Some video games are even building in support for even higher framerates that will allow users to play games on 120Hz or 140Hz monitors. \\
+
+        In this sense, a video game can be thought of as a soft real-time system. A soft real-time system is a real-time system where meeting the deadline is desired, but not required. The consequences for missing the deadline in a soft real-time system are miniscule compared to the consequences for missing the deadline in a hard real-time system. For video games, this could be seen as missing the target framerate for a few frames. The goal is to keep the framerate close enough to the target so that the user never notices a performance dip. For example, if a game runs at 28 FPS rather than 30 FPS for a few seconds, the user may not even notice. But if a game runs at 15 FPS even for one second, the user will notice the strange delay and the illusion of movement will be ruined. Even then, the game is still playable, and most likely still enjoyable. A video game missing it's deadline is not catastrophic for the user experience, but too many missed deadlines and the player may start to notice. \\
+
+        REFINE THIS??? INCLUDE THIS
+        Not all video games may be considered as soft real-time systems. Many competetive games require tight controls and fast feedback loops for all players. In this sense, some games can be considered as hard real-time systems. If the game does not process the players input in time, or does not update the screen fast enough, the players may get frustrated and stop playing.
+
+    \subsection{Current Video Game Technology}
+        talk about different physics engines, scheduling algorithms, running on multiple processors, etc...
+
+        Different video games have different requirements when it comes to the game engine being run. A text based adventure game is perhaps the most simple example, requiring almost no deadlines whatsoever. A text based adventure game will need to read player inputs, and display text to the console. See Figure \ref{text_based_loop}.
+        \\
+
+        \begin{figure}[H]
+            \includegraphics[width=12cm]{text_based_loop.png}
+            \centering
+            \caption{Text Based Game Loop}
+            \label{text_based_loop}
+        \end{figure}
+
+        On the opposite end of the spectrum, a first person shooter may require a much more complex game engine, having to render a 3D world with a sound engine, lighting engine, physics engine, and networking that allows multiple players to play in the same space. All of these components working together creates a very complicated game loop that must fulfill many deadlines. See Figure \ref{fps_game_loop}.
+
+        \begin{figure}[H]
+            \includegraphics[width=12cm]{fps_loop.png}
+            \centering
+            \caption{First Person Shooter Game Loop}
+            \label{fps_game_loop}
+        \end{figure}
+
+        talk about how multithreading can help the processor hereeeeee
+
+        In order to improve performance, many video games split tasks between many processors. For example, a game engine may split out the rendering task into a process on it's own, and compute all other tasks in a separate thread. This will improve performance because at the same time as objects are being drawn to the screen, the physics engine can update and calculate the next locations for those objects. See Figure \ref{multithread_loop}.
+
+        \begin{figure}[H]
+            \includegraphics[width=12cm]{multithread_loop.png}
+            \centering
+            \caption{Multithreaded Game Loop}
+            \label{multithread_loop}
+        \end{figure}
+
+
 
 \section{Methodology}
-    \subsection{Procedure, etc...}
+    \section{Psuedocode}
+        For the sake of simplicity, this project will use a more basic game loop model that only runs on a single processor. This project will process user inputs, update state variables, update physics objects, and then render the screen using a 2D renderer. See Figure \ref{my_loop}.
 
-\newpage
+        \begin{figure}[H]
+            \includegraphics[width=12cm]{my_loop.png}
+            \centering
+            \caption{Planned Game Loop}
+            \label{my_loop}
+        \end{figure}
 
-\section{Results and Discussion}
-    \subsection{Might not need for first report.}
+        The Psuedocode for the program is as follows:
 
-\newpage
+\begin{lstlisting}
+main():
+    initialize()
+    while(playing):
+        readInputs()
+        updateState()
+        updatePhysics()
+        drawScreen()
 
-\section{Conclusion}
+    terminate()
+\end{lstlisting}
+
+    \section{Scheduler}
+
+        This program will attempt to test a new way of scheduling tasks, one that allows the programmer to change priorities on the fly. The main goal of this scheduler will be to allow the programmer to set priorities of each of the four main loop functions dynamically. For example, if the programmer knows that a certain section requires many physics calculation, he or she can assign the bulk of the run-time to the physics updater. This will in turn reduce the alloted run-time for each of the other processes in the main loop, reducing their accuracy while improving the accuracy of the physics updater.
+        \\
+
+        The scheduler will execute the following procedure:
+        \begin{enumerate}
+            \item{Designate a target framerate to always meet.}
+            \item{Calculate how long each main loop should last based on the given framerate.}
+            \item{Allow the programmer to assign priorities to each process.}
+            \item{Allow each process to run for a portion of the loop based on its priority. For example, if all 4 processes are given a priority of 2, each one would run for 25\% of the time alloted for the main loop. If updatePhysics() is given a priority of 4, and the others are all 2, updatePhysics() will run for 40\% of the loop while each other function will only run for 20\%.}
+        \end{enumerate}
+
+        This project will demonstrate how a game engine can utilize the power of dynamically changing priorities on the fly. It will also show how allowing the program to specifiy different priorities at different points in the game will lead to a smoother game experience for the player. 
 
 \newpage
 
@@ -102,10 +170,26 @@
 \section{References}
 
     \begin{thebibliography}{9}
-        \bibitem{fake}
-            J. Siems, \textit{This Paper Rocks}, 2019. [Online]. Available: \url{josh.com/paper}. [Accessed: today].
         \bibitem{sim_env}
             M. Joselli, \textit{A Distributed Architecture for Simulation Environments Based on Game Engine Systems}, 2014. [Online]. Available: \url{https://www.springer.com/cda/content/document/cda_downloaddocument/9783642551307-c2.pdf?SGWID=0-0-45-1463314-p176712314}. [Accessed: 28-Feb-2019].
+        \bibitem{rt_gl}
+            L. Valente, \textit{Real Time Game Loop Models for Single-Player Computer Games}, 2005. [Online]. Available: \url{https://pdfs.semanticscholar.org/f401/4a0328b383ee509ed837ff16af96af1168eb.pdf}. [Accessed: 05-March-2019].
+        \bibitem{lb_sch}
+            S. Reinalter, \textit{Building a load-balanced task scheduler}, 2012. [Online]. Available: \url{https://blog.molecular-matters.com/2012/04/05/building-a-load-balanced-task-scheduler-part-1-basics/}. [Accessed: 05-March-2019].
+        \bibitem{grandmaster}
+            \textit{Game Engine part 4}, 2014. [Online]. Available: \url{http://www.grandmaster.nu/blog/?page_id=261}. [Accessed: 05-March-2019].
+        \bibitem{gamasutra}
+            J. Muffat-Meridol, \textit{Do-it-yourself Game Task Scheduling}, 2010. [Online]. Available: \url{https://www.gamasutra.com/view/feature/132675/sponsored_feature_doityourself_.php}. [Accessed: 05-March-2019].
+        \bibitem{}
+            D. Binks, \textit{Implementing a Lightweight Task Scheduler}, 2015. [Online]. Available: \url{https://www.enkisoftware.com/devlogpost-20150822-1-Implementing-a-lightweight-task-scheduler}. [Accessed: 05-March-2019].
+        \bibitem{}
+            \textit{Game Loop}, n.d. [Online]. Available: \url{http://gameprogrammingpatterns.com/game-loop.html}. [Accessed: 05-March-2019].
+        \bibitem{}
+            P. Dickinson, \textit{Instant Replay: Building a Game Engine with Reproducible Behavior}, 2001. [Online]. Available: \url{http://www.gamasutra.com/view/feature/3057/instant_replay_building_a_game_php}. [Accessed: 05-March-2019].
+        \bibitem{}
+            K. Witters, \textit{deWiTTERS Game Loop}, 2009. [Online]. Available: \url{http://www.koonsolo.com/news/dewitters-gameloop/}. [Accessed: 05-March-2019].
+        \bibitem{}
+            R. Monteiro, \textit{Understanding the Game Main Loop}, 2010. [Online]. Available: \url{http://higherorderfun.com/blog/2010/08/17/understanding-the-game-main-loop/}. [Accessed: 05-March-2019].
     \end{thebibliography}
 
 \newpage
