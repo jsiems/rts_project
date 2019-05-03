@@ -7,7 +7,8 @@
                 "/usr/local/include",
                 "${workspaceFolder}",
                 "${workspaceFolder}/src",
-                "${workspaceFolder}/lib"
+                "${workspaceFolder}/lib",
+                "C:/Users/joshu/AppData/Local/Packages/CanonicalGroupLimited.Ubuntu18.04onWindows_79rhkp1fndgsc/LocalState/rootfs/usr/include/x86_64-linux-gnu"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -67,8 +68,8 @@
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
                 "${workspaceFolder}",
                 "${workspaceFolder}/include",
-                "C:\\MinGW\\include",
-                "C:\\MinGW\\lib\\gcc\\mingw32\\6.3.0\\include",
+                "C:\\\\MinGW\\\\include",
+                "C:\\\\MinGW\\\\lib\\\\gcc\\\\mingw32\\\\6.3.0\\\\include",
                 "${workspaceFolder}/src",
                 "${workspaceFolder}/lib"
             ],

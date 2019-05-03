@@ -12,6 +12,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "texman.h"
+#include "circle.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
@@ -79,8 +80,13 @@ int main() {
     // initialize the sprite renderer
     struct SpriteRenderer sprite;
     initSpriteRenderer(&sprite);
-
     int tex_id = getTextureId(&texman, "temp_sprite");
+
+    // ************* CIRCLE STUFF ************
+    initCircleRenderer(&texman);
+    struct Circle c, c2;
+    initCircle(&c, 100, 100, 10, 10);
+    initCircle(&c2, 150, 150, 0, 0);
 
     //keep track of FPS
     uint64_t total_frames = 0;
@@ -96,7 +102,6 @@ int main() {
         float current_frame = glfwGetTime();
         delta_time = current_frame - last_frame;
         last_frame = current_frame;
-
         total_frames ++;
 
         //process inputs
@@ -106,10 +111,25 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // update camera uniforms
         updateDefaultUniforms(&shader, &cam);
+        
 
+        // DRAW MUH CIRC
+        updateCircle(&c, delta_time);
+        updateCircle(&c2, delta_time);
+        if(isColliding(&c, &c2)) {
+            c.color = (struct v3){1.0f, 0.5f, 0.5f};
+        }
+        else {
+            c.color = (struct v3){1.0f, 1.0f, 1.0f};
+        }
+        drawCircle(&c);
+        drawCircle(&c2);
+
+
+        // do weird background thing
         float rotation = 3.14f / 4.0f * glfwGetTime();
-
         drawSprite(&sprite, &shader, tex_id, (vec2){200, 200}, (vec2){300, 400}, rotation, (vec3){0.5, 1.0, 0.5});
 
         glfwSwapBuffers(window);

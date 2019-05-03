@@ -10,5 +10,9 @@ out vec4 color;
 in vec2 tex_coords;
 
 void main() {
-    color = vec4(sprite_color, 1.0) * texture(image, tex_coords);
+    vec4 texColor = vec4(sprite_color, 1.0) * texture(image, tex_coords);
+    if(texColor.a < 0.1) {
+        discard;
+    }
+    color = texColor;
 }
