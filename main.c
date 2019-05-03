@@ -44,6 +44,8 @@ uint8_t t_pressed = 0;
 
 struct Camera cam;
 
+struct Circle c, c2;
+
 int main() {
     printf("running!\n");
 
@@ -84,8 +86,7 @@ int main() {
 
     // ************* CIRCLE STUFF ************
     initCircleRenderer(&texman);
-    struct Circle c, c2;
-    initCircle(&c, 100, 100, 10, 10);
+    initCircle(&c, 100, 100, 0, 0);
     initCircle(&c2, 150, 150, 0, 0);
 
     //keep track of FPS
@@ -113,7 +114,7 @@ int main() {
 
         // update camera uniforms
         updateDefaultUniforms(&shader, &cam);
-        
+
 
         // DRAW MUH CIRC
         updateCircle(&c, delta_time);
@@ -156,6 +157,8 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
     int d = glfwGetKey(window, GLFW_KEY_D);
     int t = glfwGetKey(window, GLFW_KEY_T);
 
+    int p = glfwGetKey(window, GLFW_KEY_P);
+
     //quit when escape is pressed
     if(escape == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1U);
@@ -189,6 +192,15 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
         t_pressed = 0;
     }
 
+    static double press_time = 0;
+    if(p == GLFW_PRESS && glfwGetTime() - press_time > 1) {
+        printf("c: x: %.2f\ty: %.2f\tr: %f\n", c.pos.x, c.pos.y, c.radius);
+        printf("c2: x: %.2f\ty: %.2f\tr: %f\n", c2.pos.x, c2.pos.y, c2.radius);
+        printf("distance: %.2f\n", distCirc(c.pos.x, c.pos.y, c2.pos.x, c2.pos.y));
+        fflush(stdout);
+        press_time = glfwGetTime();
+    }
+
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
@@ -199,10 +211,11 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
         first_mouse = 0;
     }
 
-    float x_offset = x_pos - last_mouse_x;
-    float y_offset = last_mouse_y - y_pos;
     last_mouse_x = x_pos;
     last_mouse_y = y_pos;
+
+    c.pos.x = x_pos;
+    c.pos.y = y_pos;
 }
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {

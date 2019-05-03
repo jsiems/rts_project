@@ -37,6 +37,8 @@ int initCircleRenderer(struct TexMan *texman);
 // initialize this game object
 int initCircle(struct Circle *c, float x, float y, float xv, float yv);
 
+float distCirc(float x1, float y1, float x2, float y2);
+
 // update physics variables
 int updateCircle(struct Circle *c, float dt);
 

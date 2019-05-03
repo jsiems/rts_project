@@ -63,15 +63,20 @@ int updateCircle(struct Circle *c, float dt) {
 // draw this object to the screen
 int drawCircle(struct Circle *c) {
     drawSprite(&circle_sprite, &circle_shader, circle_tex_id, 
-    (vec2){c->pos.x, c->pos.y}, (vec2){c->radius, c->radius}, 
+    (vec2){c->pos.x - c->radius, c->pos.y - c->radius},     // position
+    (vec2){c->radius * 2, c->radius * 2},                   // length, width
     0.0f, (vec3){c->color.x, c->color.y, c->color.z});
 
     return 0;
 }
 
+float distCirc(float x1, float y1, float x2, float y2) {
+    return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+}
+
 int isColliding(struct Circle *a, struct Circle *b) {
-    float r = a->radius + b->radius;
-    return r > sqrt(pow(a->pos.x - b->pos.x, 2) + pow(a->pos.y - b->pos.y, 2));
+    float r = (a->radius + b->radius);
+    return distCirc(a->pos.x, a->pos.y, b->pos.x, b->pos.y) < r;
 }
 
 // called when two circles are colliding

@@ -39,8 +39,6 @@ void drawSprite(struct SpriteRenderer *sprite, struct Shader *shader,
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_id);
 
-    glEnable(GL_BLEND);
-
     glUseProgram(shader->id);
     glBindVertexArray(sprite->VAO);
 
