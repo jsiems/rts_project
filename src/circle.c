@@ -27,7 +27,7 @@ int initCircleRenderer(struct TexMan *texman, struct Shader *shader) {
 }
 
 // initialize this game object
-int initCircle(struct Circle *c, float x, float y, float xv, float yv, float radius) {
+int initCircle(struct Circle *c, float x, float y, float xv, float yv, float radius, float mass) {
     if(circle_renderer_initialized == 0) {
         return 1;
     }
@@ -42,6 +42,13 @@ int initCircle(struct Circle *c, float x, float y, float xv, float yv, float rad
     c->color.y = 1.0f;
     c->color.z = 1.0f;
 
+    c->mass = mass;
+    if(c->mass == 0) {
+        c->inv_mass = 0;
+    }
+    else {
+        c->inv_mass = 1 / c->mass;
+    }
     c->restitution = 1;
 
     num_circles ++;
@@ -53,6 +60,19 @@ int initCircle(struct Circle *c, float x, float y, float xv, float yv, float rad
 int updateCircle(struct Circle *c, float dt) {
     c->pos.x += c->vel.x * dt;
     c->pos.y += c->vel.y * dt;
+
+    if(c->color.y < 1.0f) {
+        c->color.y += dt / 4;
+    }
+    if(c->color.z < 1.0f) {
+        c->color.z += dt / 4;
+    }
+    if(c->color.y > 1.0f) {
+        c->color.y = 1.0f;
+    }
+    if(c->color.z > 1.0f) {
+        c->color.z = 1.0f;
+    }
 
     return 0;
 }
@@ -85,9 +105,6 @@ int collide(struct Circle *a, struct Circle *b) {
     rv.x = b->vel.x - a->vel.x;
     rv.y = b->vel.y - a->vel.y;
 
-    #include <stdio.h>
-    printf("Relative Velocity: x: %.2f\ty: %.2f\n", rv.x, rv.y);
-
     // calculate normal vector from a to b
     // THIS normal calculation will likely be an input in the future
     struct v2 norm;
@@ -97,16 +114,32 @@ int collide(struct Circle *a, struct Circle *b) {
     norm.x /= mag;
     norm.y /= mag;
 
-
-    printf("norm vec: x: %.2f\ty: %.2f\n", norm.x, norm.y);
-
     float vel_norm = rv.x * norm.x + rv.y * norm.y;
-
-    printf("norm vel: %.2f\n", vel_norm);
 
     // do not collide if velocities are separating
     if(vel_norm > 0) {
         return 1;
+    }
+
+    printf("vel_norm: %.2f\n", vel_norm);
+
+    // update color for cool effects
+    #define DV 10
+    a->color.y -= abs(vel_norm / DV);
+    a->color.z -= abs(vel_norm / DV);
+    if(a->color.y < 0) {
+        a->color.y = 0;
+    }
+    if(a->color.z < 0) {
+        a->color.z = 0;
+    }
+    b->color.y -= abs(vel_norm / DV);
+    b->color.z -= abs(vel_norm / DV);
+    if(b->color.y < 0) {
+        b->color.y = 0;
+    }
+    if(b->color.z < 0) {
+        b->color.z = 0;
     }
 
     // use the lowest restitution (bounciness)

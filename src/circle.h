@@ -35,7 +35,7 @@ struct Circle {
 int initCircleRenderer(struct TexMan *texman, struct Shader *shader);
 
 // initialize this game object
-int initCircle(struct Circle *c, float x, float y, float xv, float yv, float radius);
+int initCircle(struct Circle *c, float x, float y, float xv, float yv, float radius, float mass);
 
 float distCirc(float x1, float y1, float x2, float y2);
 

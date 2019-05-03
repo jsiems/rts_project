@@ -93,9 +93,15 @@ int main() {
 
     // push the two circles
     struct Circle c;
-    initCircle(&c, 100, 300, 50, 0, 20);
+    // moving circles
+    initCircle(&c, 300, 300, 50, 0, 20, 10);
     insertNode(&circles, &c);
-    initCircle(&c, 700, 300, -80, 0, 25);
+    initCircle(&c, 500, 300, -80, 0, 25, 10);
+    insertNode(&circles, &c);
+    // still circles
+    initCircle(&c, 100, 300, 0, 0, 40, 0);
+    insertNode(&circles, &c);
+    initCircle(&c, 700, 300, 0, 0, 40, 0);
     insertNode(&circles, &c);
 
 
@@ -128,7 +134,6 @@ int main() {
             other = node->next;
             while(other != 0) {
                 if(isColliding(current, (struct Circle *)other->data)) {
-                    printf("BIG OLE COLLISIONS\n");
                     collide(current, (struct Circle *)other->data);
                 }
                 other = other->next;
