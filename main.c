@@ -12,7 +12,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "texman.h"
-#include "circle.h"
+#include "phys.h"
 #include "list.h"
 
 //macros
@@ -44,6 +44,8 @@ uint8_t draw_wireframe = 0;
 uint8_t t_pressed = 0;
 
 struct Camera cam;
+
+struct Circle *mouse;
 
 int main() {
     printf("running!\n");
@@ -86,23 +88,18 @@ int main() {
 
 
     // ************* CIRCLE STUFF ************
-    initCircleRenderer(&texman, &shader);
+    initPhysRenderer(&texman, &shader);
 
-    struct List circles;
-    initList(&circles, sizeof(struct Circle));
+    struct List objects;
+    initList(&objects);
 
-    // push the two circles
-    struct Circle c;
-    // moving circles
-    initCircle(&c, 300, 300, 50, 0, 20, 10);
-    insertNode(&circles, &c);
-    initCircle(&c, 500, 300, -80, 0, 25, 10);
-    insertNode(&circles, &c);
-    // still circles
-    initCircle(&c, 100, 300, 0, 0, 40, 0);
-    insertNode(&circles, &c);
-    initCircle(&c, 700, 300, 0, 0, 40, 0);
-    insertNode(&circles, &c);
+    // moving objects
+    addCircle(&objects, 300, 300, 50, 0, 20, 10);
+    addCircle(&objects, 500, 300, -80, 0, 25, 10);
+    // still objects
+    addCircle(&objects, 100, 300, 0, 0, 40, 0);
+    addCircle(&objects, 700, 300, 0, 0, 40, 0);
+    addRect(&objects, 100, 500, 600, 50);
 
 
     //Main loop
@@ -126,25 +123,8 @@ int main() {
         // update camera uniforms
         updateDefaultUniforms(&shader, &cam);
 
-        struct Node *node, *other;
-        node = circles.front;
-        while(node != 0) {
-            struct Circle *current;
-            current = (struct Circle *)node->data;
-            other = node->next;
-            while(other != 0) {
-                if(isColliding(current, (struct Circle *)other->data)) {
-                    collide(current, (struct Circle *)other->data);
-                }
-                other = other->next;
-            }
-            updateCircle(current, delta_time);
-            drawCircle(current);
-
-            node = node->next;
-        }
-
-
+        updatePhysics(&objects, delta_time);
+        drawObjects(&objects);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

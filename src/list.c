@@ -1,17 +1,13 @@
 
 #include "list.h"
 
-int initList(struct List *l, int data_length) {
-    if(data_length <= 0) {
-        return -1;
-    }
-    l->data_length = data_length;
+int initList(struct List *l) {
     l->front = 0;
 
     return 0;
 }
 
-int insertNode(struct List *l, void *data) {
+int insertNode(struct List *l, void *data, int data_length, int data_type) {
     struct Node *end, *new;
 
     if(data == 0) {
@@ -20,10 +16,12 @@ int insertNode(struct List *l, void *data) {
 
     // initiliazed new node
     new = malloc(sizeof(struct Node));
-    new->data = malloc(l->data_length);
+    new->data_length = data_length;
+    new->data_type = data_type;
+    new->data = malloc(data_length);
     new->next = 0;
     new->prev = 0;
-    memcpy(new->data, data, l->data_length);
+    memcpy(new->data, data, data_length);
 
     // Insert at the end
     end = l->front;

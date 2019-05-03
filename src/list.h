@@ -5,21 +5,23 @@
 #include <string.h>
 
 struct List {
-    int data_length;
     struct Node *front;
 };
 
 struct Node {
     void *data;
+    int data_length;
+    int data_type;
     struct Node *next;
     struct Node *prev;
 };
 
 // initializes a linked list
-int initList(struct List *l, int data_length);
+int initList(struct List *l);
 
 // inserts into linked list
-int insertNode(struct List *l, void *data);
+// copies data from data pointer of length data length into a new node
+int insertNode(struct List *l, void *data, int data_length, int data_type);
 
 // removes from linked list
 int removeNode(struct List *l, struct Node *node);
