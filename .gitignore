@@ -8,3 +8,4 @@ main
 *.lot
 *.toc
 _minted*
+.vscode
