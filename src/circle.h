@@ -32,10 +32,10 @@ struct Circle {
 };
 
 // must be called before any circles are added
-int initCircleRenderer(struct TexMan *texman);
+int initCircleRenderer(struct TexMan *texman, struct Shader *shader);
 
 // initialize this game object
-int initCircle(struct Circle *c, float x, float y, float xv, float yv);
+int initCircle(struct Circle *c, float x, float y, float xv, float yv, float radius);
 
 float distCirc(float x1, float y1, float x2, float y2);
 

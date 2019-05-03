@@ -5,21 +5,16 @@
 
 // private global circle rendering variables
 static struct SpriteRenderer circle_sprite;
-static struct Shader circle_shader;
+static struct Shader *circle_shader;
 static int circle_tex_id = 0;
 static int num_circles = 0; // current number of circles
 static int circle_renderer_initialized = 0;
 
 // must be called before any circles are added
-int initCircleRenderer(struct TexMan *texman) {
+int initCircleRenderer(struct TexMan *texman, struct Shader *shader) {
 
-    // initialize shader
-    if(!initializeShader(&circle_shader, "shaders/sprite_vs.glsl", "shaders/sprite_fs.glsl")) {
-        printf("Error initializing circle shader\n");
-        exit(1);
-    }
-    glUseProgram(circle_shader.id);
-    setInt(&circle_shader, "image", 0);
+    // set shader
+    circle_shader = shader;
 
     // get texture id
     circle_tex_id = getTextureId(texman, "circle");
@@ -32,7 +27,7 @@ int initCircleRenderer(struct TexMan *texman) {
 }
 
 // initialize this game object
-int initCircle(struct Circle *c, float x, float y, float xv, float yv) {
+int initCircle(struct Circle *c, float x, float y, float xv, float yv, float radius) {
     if(circle_renderer_initialized == 0) {
         return 1;
     }
@@ -42,7 +37,7 @@ int initCircle(struct Circle *c, float x, float y, float xv, float yv) {
     c->vel.x = xv;
     c->vel.y = yv;
 
-    c->radius = 50;
+    c->radius = radius;
     c->color.x = 1.0f;
     c->color.y = 1.0f;
     c->color.z = 1.0f;
@@ -62,7 +57,7 @@ int updateCircle(struct Circle *c, float dt) {
 
 // draw this object to the screen
 int drawCircle(struct Circle *c) {
-    drawSprite(&circle_sprite, &circle_shader, circle_tex_id, 
+    drawSprite(&circle_sprite, circle_shader, circle_tex_id, 
     (vec2){c->pos.x - c->radius, c->pos.y - c->radius},     // position
     (vec2){c->radius * 2, c->radius * 2},                   // length, width
     0.0f, (vec3){c->color.x, c->color.y, c->color.z});

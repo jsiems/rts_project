@@ -79,20 +79,19 @@ int main() {
     struct TexMan texman;
     initTexMan(&texman);
 
-    // initialize the sprite renderer
-    struct SpriteRenderer sprite;
-    initSpriteRenderer(&sprite);
-    int tex_id = getTextureId(&texman, "temp_sprite");
-
     // ************* CIRCLE STUFF ************
-    initCircleRenderer(&texman);
-    initCircle(&c, 100, 100, 0, 0);
-    initCircle(&c2, 150, 150, 0, 0);
+    initCircleRenderer(&texman, &shader);
+    initCircle(&c, 100, 100, 0, 0, 20);
+    initCircle(&c2, 300, 300, 0, 0, 25);
 
     //keep track of FPS
     uint64_t total_frames = 0;
     float start_time = glfwGetTime();
     float min_frame_time = 1 / FPS_LIMIT;
+
+
+    float deg = 0;
+
 
     //Main loop
     while(!glfwWindowShouldClose(window)) {
@@ -117,6 +116,11 @@ int main() {
 
 
         // DRAW MUH CIRC
+        float r = 150;
+        deg += delta_time * 400;
+        if(deg > 360) deg = 0;
+        c2.pos.x = 400 + r * cos(degToRad(deg));
+        c2.pos.y = 300 + r * sin(degToRad(deg));
         updateCircle(&c, delta_time);
         updateCircle(&c2, delta_time);
         if(isColliding(&c, &c2)) {
@@ -129,9 +133,6 @@ int main() {
         drawCircle(&c2);
 
 
-        // do weird background thing
-        float rotation = 3.14f / 4.0f * glfwGetTime();
-        drawSprite(&sprite, &shader, tex_id, (vec2){200, 200}, (vec2){300, 400}, rotation, (vec3){0.5, 1.0, 0.5});
 
         glfwSwapBuffers(window);
         glfwPollEvents();
