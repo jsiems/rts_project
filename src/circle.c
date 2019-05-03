@@ -42,6 +42,8 @@ int initCircle(struct Circle *c, float x, float y, float xv, float yv, float rad
     c->color.y = 1.0f;
     c->color.z = 1.0f;
 
+    c->restitution = 1;
+
     num_circles ++;
 
     return 0;
@@ -83,12 +85,24 @@ int collide(struct Circle *a, struct Circle *b) {
     rv.x = b->vel.x - a->vel.x;
     rv.y = b->vel.y - a->vel.y;
 
+    #include <stdio.h>
+    printf("Relative Velocity: x: %.2f\ty: %.2f\n", rv.x, rv.y);
+
     // calculate normal vector from a to b
+    // THIS normal calculation will likely be an input in the future
     struct v2 norm;
     norm.x = b->pos.x - a->pos.x;
     norm.y = b->pos.y - a->pos.y;
+    float mag = distCirc(norm.x, 0, norm.y, 0);
+    norm.x /= mag;
+    norm.y /= mag;
+
+
+    printf("norm vec: x: %.2f\ty: %.2f\n", norm.x, norm.y);
 
     float vel_norm = rv.x * norm.x + rv.y * norm.y;
+
+    printf("norm vel: %.2f\n", vel_norm);
 
     // do not collide if velocities are separating
     if(vel_norm > 0) {

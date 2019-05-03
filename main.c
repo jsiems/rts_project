@@ -13,6 +13,7 @@
 #include "sprite.h"
 #include "texman.h"
 #include "circle.h"
+#include "list.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
@@ -43,8 +44,6 @@ uint8_t draw_wireframe = 0;
 uint8_t t_pressed = 0;
 
 struct Camera cam;
-
-struct Circle c, c2;
 
 int main() {
     printf("running!\n");
@@ -79,18 +78,25 @@ int main() {
     struct TexMan texman;
     initTexMan(&texman);
 
-    // ************* CIRCLE STUFF ************
-    initCircleRenderer(&texman, &shader);
-    initCircle(&c, 100, 100, 0, 0, 20);
-    initCircle(&c2, 300, 300, 0, 0, 25);
-
     //keep track of FPS
     uint64_t total_frames = 0;
     float start_time = glfwGetTime();
     float min_frame_time = 1 / FPS_LIMIT;
 
 
-    float deg = 0;
+
+    // ************* CIRCLE STUFF ************
+    initCircleRenderer(&texman, &shader);
+
+    struct List circles;
+    initList(&circles, sizeof(struct Circle));
+
+    // push the two circles
+    struct Circle c;
+    initCircle(&c, 100, 300, 50, 0, 20);
+    insertNode(&circles, &c);
+    initCircle(&c, 700, 300, -80, 0, 25);
+    insertNode(&circles, &c);
 
 
     //Main loop
@@ -114,23 +120,24 @@ int main() {
         // update camera uniforms
         updateDefaultUniforms(&shader, &cam);
 
+        struct Node *node, *other;
+        node = circles.front;
+        while(node != 0) {
+            struct Circle *current;
+            current = (struct Circle *)node->data;
+            other = node->next;
+            while(other != 0) {
+                if(isColliding(current, (struct Circle *)other->data)) {
+                    printf("BIG OLE COLLISIONS\n");
+                    collide(current, (struct Circle *)other->data);
+                }
+                other = other->next;
+            }
+            updateCircle(current, delta_time);
+            drawCircle(current);
 
-        // DRAW MUH CIRC
-        float r = 150;
-        deg += delta_time * 400;
-        if(deg > 360) deg = 0;
-        c2.pos.x = 400 + r * cos(degToRad(deg));
-        c2.pos.y = 300 + r * sin(degToRad(deg));
-        updateCircle(&c, delta_time);
-        updateCircle(&c2, delta_time);
-        if(isColliding(&c, &c2)) {
-            c.color = (struct v3){1.0f, 0.5f, 0.5f};
+            node = node->next;
         }
-        else {
-            c.color = (struct v3){1.0f, 1.0f, 1.0f};
-        }
-        drawCircle(&c);
-        drawCircle(&c2);
 
 
 
@@ -195,9 +202,10 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
 
     static double press_time = 0;
     if(p == GLFW_PRESS && glfwGetTime() - press_time > 1) {
-        printf("c: x: %.2f\ty: %.2f\tr: %f\n", c.pos.x, c.pos.y, c.radius);
-        printf("c2: x: %.2f\ty: %.2f\tr: %f\n", c2.pos.x, c2.pos.y, c2.radius);
-        printf("distance: %.2f\n", distCirc(c.pos.x, c.pos.y, c2.pos.x, c2.pos.y));
+        //printf("c: x: %.2f\ty: %.2f\tr: %f\n", c.pos.x, c.pos.y, c.radius);
+        //printf("c2: x: %.2f\ty: %.2f\tr: %f\n", c2.pos.x, c2.pos.y, c2.radius);
+        //printf("distance: %.2f\n", distCirc(c.pos.x, c.pos.y, c2.pos.x, c2.pos.y));
+        printf("p pressed\n");
         fflush(stdout);
         press_time = glfwGetTime();
     }
@@ -215,8 +223,8 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
     last_mouse_x = x_pos;
     last_mouse_y = y_pos;
 
-    c.pos.x = x_pos;
-    c.pos.y = y_pos;
+    //c.pos.x = x_pos;
+    //c.pos.y = y_pos;
 }
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {

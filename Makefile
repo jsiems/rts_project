@@ -19,10 +19,10 @@ CFLAGS=-Wall -msse3 -g -I$(IDIR) $(LDIR) $(LIBS)
 # hide .o files in obj directory
 ODIR=obj
 
-_DEPS = camera.h sprite.h shader.h texman.h circle.h
+_DEPS = camera.h sprite.h shader.h texman.h circle.h list.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o shader.o sprite.o glad.o camera.o texman.o circle.o
+_OBJ = main.o shader.o sprite.o glad.o camera.o texman.o circle.o list.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 # tells make to check include directory for dependencies
