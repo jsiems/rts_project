@@ -10,6 +10,9 @@
 #define CIRC_TYPE 0
 #define RECT_TYPE 1
 
+// Inspiration:
+// https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
+
 struct v2 {
     float x;
     float y;
@@ -45,11 +48,18 @@ struct Rect {
     float restitution;
 };
 
+struct Manifold {
+    void *a;
+    void *b;
+    float penetration;
+    struct v2 norm;
+};
+
 // must be called before any objects are added
 int initPhysRenderer(struct TexMan *texman, struct Shader *shdr);
 
 // add circle to the world
-int addCircle(struct List *objects, float x, float y, float xv, float yv, float radius, float mass);
+struct Node *addCircle(struct List *objects, float x, float y, float xv, float yv, float radius, float mass);
 
 // Add rectangle to objects list
 int addRect(struct List *objects, float x, float y, float l, float h);
@@ -66,13 +76,12 @@ int drawRect(struct Rect *r);
 
 // Physics stuff
 
-// calculate distance between two circles
-float distCirc(float x1, float y1, float x2, float y2);
-// update physics variables
 int updateCircle(struct Circle *c, float dt);
 int updatePhysics(struct List *objects, float dt);
-int isCollidingCircVCirc(struct Circle *a, struct Circle *b);
-int collideCirc(struct Circle *a, struct Circle *b);
+int isCollidingCircVCirc(struct Manifold *m);
+int isCollidingCircVRect(struct Manifold *m);
+int collideCirc(struct Manifold *m);
+int posCorCircVCirc(struct Manifold *m);
 
 
 #endif

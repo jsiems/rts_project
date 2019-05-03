@@ -7,11 +7,11 @@ int initList(struct List *l) {
     return 0;
 }
 
-int insertNode(struct List *l, void *data, int data_length, int data_type) {
+struct Node *insertNode(struct List *l, void *data, int data_length, int data_type) {
     struct Node *end, *new;
 
     if(data == 0) {
-        return -1;
+        return 0;
     }
 
     // initiliazed new node
@@ -40,7 +40,7 @@ int insertNode(struct List *l, void *data, int data_length, int data_type) {
         new->next = 0;
     }
 
-    return 0;
+    return new;
 }
 
 int removeNode(struct List *l, struct Node *node) {

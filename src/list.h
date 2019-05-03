@@ -21,7 +21,7 @@ int initList(struct List *l);
 
 // inserts into linked list
 // copies data from data pointer of length data length into a new node
-int insertNode(struct List *l, void *data, int data_length, int data_type);
+struct Node *insertNode(struct List *l, void *data, int data_length, int data_type);
 
 // removes from linked list
 int removeNode(struct List *l, struct Node *node);

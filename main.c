@@ -93,12 +93,16 @@ int main() {
     struct List objects;
     initList(&objects);
 
+    // add the mouse
+    mouse = (struct Circle *)(addCircle(&objects, 0, 0, 0, 0, 20, 0))->data;
     // moving objects
-    addCircle(&objects, 300, 300, 50, 0, 20, 10);
-    addCircle(&objects, 500, 300, -80, 0, 25, 10);
+    //addCircle(&objects, 300, 300, 50, 0, 20, 10);
+    //addCircle(&objects, 500, 300, -80, 0, 25, 10);
+    addCircle(&objects, 50, 400, 0, 0, 20, 10);
     // still objects
     addCircle(&objects, 100, 300, 0, 0, 40, 0);
     addCircle(&objects, 700, 300, 0, 0, 40, 0);
+    addCircle(&objects, 50, 500, 0, 0, 30, 0);
     addRect(&objects, 100, 500, 600, 50);
 
 
@@ -187,9 +191,7 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
 
     static double press_time = 0;
     if(p == GLFW_PRESS && glfwGetTime() - press_time > 1) {
-        //printf("c: x: %.2f\ty: %.2f\tr: %f\n", c.pos.x, c.pos.y, c.radius);
-        //printf("c2: x: %.2f\ty: %.2f\tr: %f\n", c2.pos.x, c2.pos.y, c2.radius);
-        //printf("distance: %.2f\n", distCirc(c.pos.x, c.pos.y, c2.pos.x, c2.pos.y));
+        printf("c: x: %.2f\ty: %.2f\n", mouse->pos.x, mouse->pos.y);
         printf("p pressed\n");
         fflush(stdout);
         press_time = glfwGetTime();
@@ -208,8 +210,8 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
     last_mouse_x = x_pos;
     last_mouse_y = y_pos;
 
-    //c.pos.x = x_pos;
-    //c.pos.y = y_pos;
+    mouse->pos.x = x_pos;
+    mouse->pos.y = y_pos;
 }
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
