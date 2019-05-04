@@ -13,8 +13,7 @@ static int rect_tex_id = 0;
 static int renderer_initialized = 0;
 
 // Always present forces
-static float gravity = 0.5;
-static float air_res = 0.999999;
+static float gravity = 100;
 
 // PRIVATE PROTOS
 float dist(float x1, float y1, float x2, float y2);
@@ -140,10 +139,7 @@ int updateCircle(struct Circle *c, float dt) {
 
     // add gravity and air resistance
     if(c->mass > 0) {
-        c->vel.y += gravity;
-
-        c->vel.x *= air_res;
-        c->vel.y *= air_res;
+        c->vel.y += gravity * dt;
 
         c->pos.x += c->vel.x * dt;
         c->pos.y += c->vel.y * dt;
@@ -459,7 +455,7 @@ int posCorCircVCirc(struct Manifold *m) {
     a = (struct Circle *)m->a;
     b = (struct Circle *)m->b;
 
-    float percent = 0.2;
+    float percent = 0.8;
     float slop = 0.01;
     struct v2 correction;
     float corr_factor = max(m->penetration - slop, 0.0f) / (a->inv_mass + b->inv_mass) * percent;
@@ -482,7 +478,7 @@ int posCorCircVRect(struct Manifold *m) {
         return 1;
     }
 
-    float percent = 0.5;
+    float percent = 0.8;
     float slop = 0.01;
     struct v2 correction;
     float corr_factor = max(m->penetration - slop, 0.0f) / (c->inv_mass) * percent;

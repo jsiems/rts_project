@@ -21,7 +21,7 @@
 #define radToDeg(rad) ((rad) * 180.0 / M_PI)
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window, struct Camera *cam);
+void processInput(GLFWwindow *window, struct Camera *cam, float dt);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void glfw_error_callback(int code, const char *err_str);
@@ -95,18 +95,15 @@ int main() {
 
     // add the mouse
     mouse = (struct Circle *)(addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0, 20, 0))->data;
-    // moving objects
-    //addCircle(&objects, 300, 300, 50, 0, 20, 10);
-    //addCircle(&objects, 500, 300, -80, 0, 25, 10);
-    for(int i = 0; i < 100; i ++) {
-        addCircle(&objects, SCREEN_WIDTH / 2, 100, 0, 0, 10, 1);
-    }
-    //addCircle(&objects, 400, 200, 0, 0, 20, 10);
     // still objects
+    addRect(&objects, 20, 100, 20, SCREEN_HEIGHT - 200);   // left box
+    addRect(&objects, SCREEN_WIDTH - 40, 100, 20, SCREEN_HEIGHT - 200);   // right box
+    addRect(&objects, 150, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 300, 100);   // center box
     addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 125, 0, 0, 100, 0);
-    //addRect(&objects, 50, 100, 50, SCREEN_HEIGHT - 200);   // left box
-    //addRect(&objects, SCREEN_WIDTH - 100, 100, 50, SCREEN_HEIGHT - 200);   // right box
-    addRect(&objects, 100, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 200, 50);   // center box
+    addCircle(&objects, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 0, 0, 75, 0);
+    addCircle(&objects, 3 * SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 0, 0, 75, 0);
+
+    last_spawn_time = glfwGetTime();
 
 
     //Main loop
@@ -122,7 +119,7 @@ int main() {
         total_frames ++;
 
         //process inputs
-        processInput(window, &cam);
+        processInput(window, &cam, delta_time);
 
         //rendering commands here
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -138,12 +135,15 @@ int main() {
         // spawn new circles
         float spawn_period = 1 / spawn_rate;
         if(glfwGetTime() - last_spawn_time > spawn_period) {
+            while(glfwGetTime() - last_spawn_time > spawn_period) {
+                last_spawn_time +=  spawn_period;
+                int x_var = 800;
+                int y_var = 100;
+                x_var = rand() % x_var - x_var / 2;
+                y_var = rand() % y_var - y_var / 2;
+                addCircle(&objects, SCREEN_WIDTH / 2 + x_var, 100 + y_var, 0, 0, 10, 1);
+            }
             last_spawn_time = glfwGetTime();
-            int x_var = 300;
-            int y_var = 100;
-            x_var = rand() % x_var - x_var / 2;
-            y_var = rand() % y_var - y_var / 2;
-            addCircle(&objects, SCREEN_WIDTH / 2 + x_var, 100 + y_var, 0, 0, 10, 1);
         }
 
         glfwSwapBuffers(window);
@@ -162,7 +162,7 @@ int main() {
 //  keycallback insures that will we handle the input
 //  even if they release the key before we process the input
 //  in the loop
-void processInput(GLFWwindow *window, struct Camera *cam) {
+void processInput(GLFWwindow *window, struct Camera *cam, float dt) {
     int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
     int w = glfwGetKey(window, GLFW_KEY_W);
     int a = glfwGetKey(window, GLFW_KEY_A);
@@ -180,17 +180,22 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
         glfwSetWindowShouldClose(window, 1U);
 
 
+    float acl = 1;
     if(a == GLFW_PRESS) {
-        translateCamera(cam, cam_left, delta_time);
+        //translateCamera(cam, cam_left, delta_time);
+        mouse->vel.x -= acl * dt;
     }
     if(d == GLFW_PRESS) {
-        translateCamera(cam, cam_right, delta_time);
+        //translateCamera(cam, cam_right, delta_time);
+        mouse->vel.x += acl * dt;
     }
     if(w == GLFW_PRESS) {
-        translateCamera(cam, cam_up, delta_time);
+        //translateCamera(cam, cam_up, delta_time);
+        mouse->vel.y -= acl * dt;
     }
     if(s == GLFW_PRESS) {
-        translateCamera(cam, cam_down, delta_time);
+        //translateCamera(cam, cam_down, delta_time);
+        mouse->vel.y += acl * dt;
     }
 
     if(t == GLFW_PRESS && !t_pressed) {

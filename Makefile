@@ -19,7 +19,7 @@ CFLAGS=-Wall -msse3 -g -I$(IDIR) $(LDIR) $(LIBS)
 # hide .o files in obj directory
 ODIR=obj
 
-_DEPS = camera.h sprite.h shader.h texman.h phys.h list.h
+_DEPS = camera.h sprite.h shader.h texman.h phys.h list.h const.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 _OBJ = main.o shader.o sprite.o glad.o camera.o texman.o phys.o list.o
