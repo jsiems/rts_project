@@ -6,6 +6,7 @@
 
 #include "sprite.h"
 #include "list.h"
+#include "const.h"
 
 #define CIRC_TYPE 0
 #define RECT_TYPE 1
@@ -76,6 +77,7 @@ int drawRect(struct Rect *r);
 
 // Physics stuff
 
+// returns 1 if this circle is offscreen, 0 otherwise
 int updateCircle(struct Circle *c, float dt);
 int updatePhysics(struct List *objects, float dt);
 int isCollidingCircVCirc(struct Manifold *m);

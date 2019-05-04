@@ -13,8 +13,8 @@ static int rect_tex_id = 0;
 static int renderer_initialized = 0;
 
 // Always present forces
-static float gravity = 0.45;
-static float air_res = 0.9999;
+static float gravity = 0.5;
+static float air_res = 0.999999;
 
 // PRIVATE PROTOS
 float dist(float x1, float y1, float x2, float y2);
@@ -162,6 +162,12 @@ int updateCircle(struct Circle *c, float dt) {
         c->color.z = 1.0f;
     }
 
+    // if offscreen, return 1
+    if(c->pos.x + c->radius < 0 || c->pos.x - c->radius > SCREEN_WIDTH
+        || c->pos.y + c->radius < 0 || c->pos.y - c->radius > SCREEN_HEIGHT) {
+        return 1;
+    }
+
     return 0;
 }
 
@@ -196,7 +202,12 @@ int updatePhysics(struct List *objects, float dt) {
             other = other->next;
         }
         if(node->data_type == CIRC_TYPE) {
-            updateCircle((struct Circle *)node->data, dt);
+            if(updateCircle((struct Circle *)node->data, dt)) {
+                struct Node *temp = node;
+                node = node->next;
+                removeNode(objects, temp);
+                continue;
+            }
         }
 
         node = node->next;
@@ -449,7 +460,7 @@ int posCorCircVCirc(struct Manifold *m) {
     b = (struct Circle *)m->b;
 
     float percent = 0.2;
-    float slop = 0.1;
+    float slop = 0.01;
     struct v2 correction;
     float corr_factor = max(m->penetration - slop, 0.0f) / (a->inv_mass + b->inv_mass) * percent;
     correction.x = corr_factor * m->norm.x;
@@ -471,8 +482,8 @@ int posCorCircVRect(struct Manifold *m) {
         return 1;
     }
 
-    float percent = 0.2;
-    float slop = 0.1;
+    float percent = 0.5;
+    float slop = 0.01;
     struct v2 correction;
     float corr_factor = max(m->penetration - slop, 0.0f) / (c->inv_mass) * percent;
     correction.x = corr_factor * m->norm.x;

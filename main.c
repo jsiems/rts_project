@@ -14,15 +14,11 @@
 #include "texman.h"
 #include "phys.h"
 #include "list.h"
+#include "const.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
 #define radToDeg(rad) ((rad) * 180.0 / M_PI)
-
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 800
-
-#define FPS_LIMIT 144.0f
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, struct Camera *cam);
@@ -48,6 +44,9 @@ struct Camera cam;
 struct Circle *mouse;
 
 int fps_limit = 144;
+
+float spawn_rate = 1; // how many circles to spawn per second
+float last_spawn_time = 0;
 
 int main() {
     printf("running!\n");
@@ -95,19 +94,18 @@ int main() {
     initList(&objects);
 
     // add the mouse
-    mouse = (struct Circle *)(addCircle(&objects, 0, 0, 0, 0, 20, 0))->data;
+    mouse = (struct Circle *)(addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0, 20, 0))->data;
     // moving objects
     //addCircle(&objects, 300, 300, 50, 0, 20, 10);
     //addCircle(&objects, 500, 300, -80, 0, 25, 10);
     for(int i = 0; i < 100; i ++) {
-    addCircle(&objects, SCREEN_WIDTH / 2, 400, 0, 0, 20, 10);
-    addCircle(&objects, SCREEN_WIDTH / 2, 400, 0, 0, 20, 10);
-    addCircle(&objects, SCREEN_WIDTH / 2, 400, 0, 0, 20, 10);
+        addCircle(&objects, SCREEN_WIDTH / 2, 100, 0, 0, 10, 1);
     }
     //addCircle(&objects, 400, 200, 0, 0, 20, 10);
     // still objects
-    addRect(&objects, 50, 100, 50, SCREEN_HEIGHT - 200);   // left box
-    addRect(&objects, SCREEN_WIDTH - 100, 100, 50, SCREEN_HEIGHT - 200);   // right box
+    addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 125, 0, 0, 100, 0);
+    //addRect(&objects, 50, 100, 50, SCREEN_HEIGHT - 200);   // left box
+    //addRect(&objects, SCREEN_WIDTH - 100, 100, 50, SCREEN_HEIGHT - 200);   // right box
     addRect(&objects, 100, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 200, 50);   // center box
 
 
@@ -133,8 +131,20 @@ int main() {
         // update camera uniforms
         updateDefaultUniforms(&shader, &cam);
 
+        // update physics
         updatePhysics(&objects, delta_time);
         drawObjects(&objects);
+
+        // spawn new circles
+        float spawn_period = 1 / spawn_rate;
+        if(glfwGetTime() - last_spawn_time > spawn_period) {
+            last_spawn_time = glfwGetTime();
+            int x_var = 300;
+            int y_var = 100;
+            x_var = rand() % x_var - x_var / 2;
+            y_var = rand() % y_var - y_var / 2;
+            addCircle(&objects, SCREEN_WIDTH / 2 + x_var, 100 + y_var, 0, 0, 10, 1);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -162,6 +172,8 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
     
     int p = glfwGetKey(window, GLFW_KEY_P);
     int f = glfwGetKey(window, GLFW_KEY_F);
+    int up = glfwGetKey(window, GLFW_KEY_UP);
+    int dn = glfwGetKey(window, GLFW_KEY_DOWN);
 
     //quit when escape is pressed
     if(escape == GLFW_PRESS)
@@ -222,6 +234,17 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
         fflush(stdout);
     }
 
+    if(up == GLFW_PRESS) {
+        spawn_rate += 0.1;
+    }
+
+    if(dn == GLFW_PRESS) {
+        spawn_rate -= 0.1;
+        if(spawn_rate <= 0) {
+            spawn_rate = 0;
+        }
+    }
+
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
@@ -232,11 +255,13 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
         first_mouse = 0;
     }
 
+    float dx = x_pos - last_mouse_x;
+    float dy = y_pos - last_mouse_y;
     last_mouse_x = x_pos;
     last_mouse_y = y_pos;
 
-    mouse->pos.x = x_pos;
-    mouse->pos.y = y_pos;
+    mouse->pos.x += dx;
+    mouse->pos.y += dy;
 }
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
