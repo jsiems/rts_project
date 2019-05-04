@@ -81,7 +81,9 @@ int updatePhysics(struct List *objects, float dt);
 int isCollidingCircVCirc(struct Manifold *m);
 int isCollidingCircVRect(struct Manifold *m);
 int collideCirc(struct Manifold *m);
+int collideCircVRect(struct Manifold *m);
 int posCorCircVCirc(struct Manifold *m);
+int posCorCircVRect(struct Manifold *m);
 
 
 #endif

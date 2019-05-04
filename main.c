@@ -19,8 +19,8 @@
 #define degToRad(deg) ((deg) * M_PI / 180.0)
 #define radToDeg(rad) ((rad) * 180.0 / M_PI)
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 800
 
 #define FPS_LIMIT 144.0f
 
@@ -46,6 +46,8 @@ uint8_t t_pressed = 0;
 struct Camera cam;
 
 struct Circle *mouse;
+
+int fps_limit = 144;
 
 int main() {
     printf("running!\n");
@@ -83,7 +85,6 @@ int main() {
     //keep track of FPS
     uint64_t total_frames = 0;
     float start_time = glfwGetTime();
-    float min_frame_time = 1 / FPS_LIMIT;
 
 
 
@@ -98,17 +99,22 @@ int main() {
     // moving objects
     //addCircle(&objects, 300, 300, 50, 0, 20, 10);
     //addCircle(&objects, 500, 300, -80, 0, 25, 10);
-    addCircle(&objects, 50, 400, 0, 0, 20, 10);
+    for(int i = 0; i < 100; i ++) {
+    addCircle(&objects, SCREEN_WIDTH / 2, 400, 0, 0, 20, 10);
+    addCircle(&objects, SCREEN_WIDTH / 2, 400, 0, 0, 20, 10);
+    addCircle(&objects, SCREEN_WIDTH / 2, 400, 0, 0, 20, 10);
+    }
+    //addCircle(&objects, 400, 200, 0, 0, 20, 10);
     // still objects
-    addCircle(&objects, 100, 300, 0, 0, 40, 0);
-    addCircle(&objects, 700, 300, 0, 0, 40, 0);
-    addCircle(&objects, 50, 500, 0, 0, 30, 0);
-    addRect(&objects, 100, 500, 600, 50);
+    addRect(&objects, 50, 100, 50, SCREEN_HEIGHT - 200);   // left box
+    addRect(&objects, SCREEN_WIDTH - 100, 100, 50, SCREEN_HEIGHT - 200);   // right box
+    addRect(&objects, 100, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 200, 50);   // center box
 
 
     //Main loop
     while(!glfwWindowShouldClose(window)) {
         //wait for max FPS limit
+        float min_frame_time = (float)(1 / (float)fps_limit);
         while(glfwGetTime() - last_frame < min_frame_time);
 
         //update time since last frame
@@ -153,8 +159,9 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
     int s = glfwGetKey(window, GLFW_KEY_S);
     int d = glfwGetKey(window, GLFW_KEY_D);
     int t = glfwGetKey(window, GLFW_KEY_T);
-
+    
     int p = glfwGetKey(window, GLFW_KEY_P);
+    int f = glfwGetKey(window, GLFW_KEY_F);
 
     //quit when escape is pressed
     if(escape == GLFW_PRESS)
@@ -195,6 +202,24 @@ void processInput(GLFWwindow *window, struct Camera *cam) {
         printf("p pressed\n");
         fflush(stdout);
         press_time = glfwGetTime();
+    }
+
+    if(f == GLFW_PRESS && glfwGetTime() - press_time > 1) {
+        printf("Switching Frame Limit\n");
+        press_time = glfwGetTime();
+        if(fps_limit == 144) {
+            printf("switching to 60\n");
+            fps_limit = 60;
+        }
+        else if(fps_limit == 60) {
+            printf("switching to 30\n");
+            fps_limit = 30;
+        }
+        else if(fps_limit == 30) {
+            printf("switching to 144\n");
+            fps_limit = 144;
+        }
+        fflush(stdout);
     }
 
 }

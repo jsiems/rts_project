@@ -3,6 +3,7 @@
 
 #define min(x, y) (x < y ? x : y)
 #define max(x, y) (!min(x, y))
+#define clamp(a, min, max) ((a < min ? min : a) == (a > max ? max : a) ? a : (a < min ? min : max))
 
 // private global circle rendering variables
 static struct SpriteRenderer sprite;
@@ -12,7 +13,7 @@ static int rect_tex_id = 0;
 static int renderer_initialized = 0;
 
 // Always present forces
-static float gravity = 0.5;
+static float gravity = 0.45;
 static float air_res = 0.9999;
 
 // PRIVATE PROTOS
@@ -182,11 +183,13 @@ int updatePhysics(struct List *objects, float dt) {
                     }
                 }
                 if(node->data_type == CIRC_TYPE && other->data_type == RECT_TYPE) {
-                    if(/*isCollidingCircVRect(current, (struct Rect *)other->data)*/0) {
-                        //current->color = (struct v3){1.0f, 0.0f, 0.0f};
-                    }
-                    else {
-                        //current->color = (struct v3){1.0f, 1.0f, 1.0f};
+                    struct Manifold m;
+                    m.a = node->data;
+                    m.b = other->data;
+                    if(isCollidingCircVRect(&m)) {
+                        fflush(stdout);
+                        collideCircVRect(&m);
+                        posCorCircVRect(&m);
                     }
                 }
             }
@@ -260,9 +263,72 @@ int isCollidingCircVCirc(struct Manifold *m) {
 }
 
 int isCollidingCircVRect(struct Manifold *m) {
-    struct Circle *c = m->a;
-    struct Rect *r = m->b;
-    return dist(c->pos.x, c->pos.y, r->pos.x, r->pos.y) < c->radius;
+    struct Circle *c = (struct Circle *)m->a;
+    struct Rect *r = (struct Rect *)m->b;
+
+    if(c->inv_mass == 0) {
+        //return 0;
+    }
+
+    // vector from a to b
+    struct v2 n;
+    n.x = c->pos.x - r->pos.x;
+    n.y = c->pos.y - r->pos.y;
+
+    // closest point on a to center of b
+    struct v2 closest;
+    closest.x = clamp(c->pos.x, r->pos.x, r->pos.x + r->length);
+    closest.y = clamp(c->pos.y, r->pos.y, r->pos.y + r->height);
+
+    int inside = 0;
+
+    // if the center of the circle is in the rectangle
+    if(c->pos.x == closest.x && c->pos.y== closest.y) {
+        inside = 1;
+        // find the closest edge and set closest to be there
+        // (Probably a better way to do this...)
+        float dtl, dtr, dtt, dtb;
+        dtl = n.x;
+        dtr = r->length - n.x;
+        dtt = n.y;
+        dtb = r->height - n.y;
+        if(dtl < dtr && dtl < dtt && dtl < dtb) {
+            closest.x = r->pos.x;
+        }
+        else if(dtr < dtt && dtr < dtb) {
+            closest.x = r->pos.x + r->length;
+        }
+        else if(dtt < dtb) {
+            closest.y = r->pos.y;
+        }
+        else {
+            closest.y = r->pos.y + r->height;
+        }
+    }
+
+    struct v2 normal;
+    normal.x = closest.x - c->pos.x;
+    normal.y = closest.y - c->pos.y;
+    float d = lengthV2Squared(&normal);
+
+    // circle not in rectangle
+    if(!inside && d > c->radius * c->radius) {
+        return 0;
+    }
+
+    d = sqrt(d);
+
+    if(inside) {
+        m->norm.x = (-1 * normal.x) / d;
+        m->norm.y = (-1 * normal.y) / d;
+        m->penetration = c->radius - d;
+    } else {
+        m->norm.x = normal.x / d;
+        m->norm.y = normal.y / d;
+        m->penetration = c->radius - d;
+    }
+
+    return 1;
 }
 
 // called when two circles are colliding
@@ -327,6 +393,56 @@ int collideCirc(struct Manifold *m) {
     return 0;
 }
 
+// called when two circles are colliding
+int collideCircVRect(struct Manifold *m) {
+    struct Circle *c;
+    c = (struct Circle *)m->a;
+
+    // don't let static objects collide
+    if(c->inv_mass == 0) {
+        return 1;
+    }
+
+    // relative velocity
+    struct v2 rv;
+    rv.x = -1 * c->vel.x;
+    rv.y = -1 * c->vel.y;
+
+    float vel_norm = rv.x * m->norm.x + rv.y * m->norm.y;
+
+    // do not collide if velocities are separating
+    if(vel_norm > 0) {
+        return 2;
+    }
+
+    // update color for cool effects
+    #define DV 10
+    c->color.y -= abs(vel_norm / DV);
+    c->color.z -= abs(vel_norm / DV);
+    if(c->color.y < 0) {
+        c->color.y = 0;
+    }
+    if(c->color.z < 0) {
+        c->color.z = 0;
+    }
+
+    // use the lowest restitution (bounciness)
+    float e = min(c->restitution, 1.0f);
+
+    // calculate impulse scalar
+    float j = -(1 + e) * vel_norm;
+    j /= c->inv_mass;
+
+    // Apply impulse
+    struct v2 impulse;
+    impulse.x = j * m->norm.x;
+    impulse.y = j * m->norm.y;
+    c->vel.x -= c->inv_mass * impulse.x;
+    c->vel.y -= c->inv_mass * impulse.y;
+
+    return 0;
+}
+
 int posCorCircVCirc(struct Manifold *m) {
     struct Circle *a, *b;
     a = (struct Circle *)m->a;
@@ -343,6 +459,27 @@ int posCorCircVCirc(struct Manifold *m) {
     a->pos.y -= a->inv_mass * correction.y;
     b->pos.x += b->inv_mass * correction.x;
     b->pos.y += b->inv_mass * correction.y;
+
+    return 0;
+}
+
+int posCorCircVRect(struct Manifold *m) {
+    struct Circle *c;
+    c = (struct Circle *)m->a;
+
+    if(c->inv_mass == 0) {
+        return 1;
+    }
+
+    float percent = 0.2;
+    float slop = 0.1;
+    struct v2 correction;
+    float corr_factor = max(m->penetration - slop, 0.0f) / (c->inv_mass) * percent;
+    correction.x = corr_factor * m->norm.x;
+    correction.y = corr_factor * m->norm.y;
+
+    c->pos.x -= c->inv_mass * correction.x;
+    c->pos.y -= c->inv_mass * correction.y;
 
     return 0;
 }
