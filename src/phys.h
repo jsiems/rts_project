@@ -41,7 +41,6 @@ struct Circle {
     int explosive;
 
     float last_update_time;
-    
 };
 
 struct Rect {

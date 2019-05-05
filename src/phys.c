@@ -71,7 +71,7 @@ struct Node *addCircle(struct List *objects, float x, float y, float xv, float y
     }
     c.restitution = 0.7;
 
-    printf("adding node at x: %.2f\ty: %.2f\n", x, y);
+    c.last_update_time = glfwGetTime();
 
     new = insertNode(objects, &c, sizeof(struct Circle), CIRC_TYPE);
 
@@ -130,9 +130,6 @@ int drawObjects(struct List *objects, float runtime) {
         }
     }
 
-    // delay till our time slot is used up
-    while(glfwGetTime() - start_time < runtime);
-
     return 0;
 }
 
@@ -182,8 +179,6 @@ int updateCircle(struct Circle *c, float dt) {
     // if offscreen, return 1
     if(c->pos.x + c->radius < 0 || c->pos.x - c->radius > SCREEN_WIDTH
         || c->pos.y + c->radius < 0 || c->pos.y - c->radius > SCREEN_HEIGHT) {
-        printf("in update, this circle is off screen\n");
-        printf("x: %.2f\ty: %.2f\n", c->pos.x, c->pos.y);
         return 1;
     }
 
@@ -230,6 +225,7 @@ int updatePhysics(struct List *objects, float runtime) {
             float dt = glfwGetTime() - ((struct Circle *)phys_node->data)->last_update_time;
             if(updateCircle((struct Circle *)phys_node->data, dt)) {
                 struct Node *temp = phys_node;
+
                 // update render_node if it is being removed
                 if(phys_node == render_node) {
                     render_node = phys_node->next;
@@ -241,8 +237,6 @@ int updatePhysics(struct List *objects, float runtime) {
                 if(phys_node == 0) {
                     phys_node = objects->front;
                 }
-                printf("REMOVING NODE\n");
-                printf("x: %.2f\ty: %.2f\n", ((struct Circle *)phys_node->data)->pos.x, ((struct Circle *)phys_node->data)->pos.y);
                 removeNode(objects, temp);
                 continue;
             }
@@ -259,9 +253,6 @@ int updatePhysics(struct List *objects, float runtime) {
             start_node = objects->front;
         }
     }
-
-    // delay till our time slot is used up
-    while(glfwGetTime() - start_time < runtime);
 
     return 0;
 }

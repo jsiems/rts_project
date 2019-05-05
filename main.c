@@ -46,14 +46,17 @@ struct Circle *mouse;
 
 int fps_limit = 60;
 
-float spawn_rate = 1;          // how many circles to spawn per second
+float spawn_rate = 10;          // how many circles to spawn per second
 float spawn_debt = 0.0f;        // how many circles should have been spawned
 float last_spawn_check = 0.0f;  // last time spawn_debt resolved
 
 int inputs_priority = 2;
 int state_priority = 2;
-int physics_priority = 2;
+int physics_priority = 20;
 int render_priority = 2;
+
+#define NUM_SCHEDULERS 2
+int scheduler = 1;
 
 int main() {
     printf("running!\n");
@@ -129,29 +132,30 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         updateDefaultUniforms(&shader, &cam);
-
-        // time alloted for each process based on priority
-        int total_priority = inputs_priority + state_priority + physics_priority + render_priority;
-        float inputs_time = (float)inputs_priority * min_frame_time / (float)total_priority;
-        float state_time = (float)state_priority * min_frame_time / (float)total_priority;
-        float physics_time = (float)physics_priority * min_frame_time / (float)total_priority;
-        float render_time = (float)render_priority * min_frame_time / (float)total_priority;
-
+        
         // MAIN LOOP
-        processInput(window, &cam, delta_time, inputs_time);
-        updateGameState(&objects, state_time);
-        updatePhysics(&objects, physics_time);
-        drawObjects(&objects, render_time);
-
-        //printf("num_objects: %d\n", objects.length);
-        static int prev_length = 0;
-
-        if(objects.length < prev_length) {
-            printf("LESS THAN BEFORE\n");
-            fflush(stdout);
-            exit(3);
+        // default scheduler, give everything all the time
+        if(scheduler == 0) {
+            processInput(window, &cam, delta_time, 100);
+            updateGameState(&objects, 100);
+            updatePhysics(&objects, 100);
+            drawObjects(&objects, 100);
         }
-        prev_length = objects.length;
+        // priority based scheduler
+        else if(scheduler == 1) {
+            // time alloted for each process based on priority
+            int total_priority = inputs_priority + state_priority + physics_priority + render_priority;
+            float inputs_time = (float)inputs_priority * min_frame_time / (float)total_priority;
+            float state_time = (float)state_priority * min_frame_time / (float)total_priority;
+            float physics_time = (float)physics_priority * min_frame_time / (float)total_priority;
+            float render_time = (float)render_priority * min_frame_time / (float)total_priority;
+
+            processInput(window, &cam, delta_time, inputs_time);
+            updateGameState(&objects, state_time);
+            updatePhysics(&objects, physics_time);
+            drawObjects(&objects, render_time);
+        }
+        
 
         // more rendering commands
         glfwSwapBuffers(window);
@@ -162,7 +166,7 @@ int main() {
     destroyTexMan(&texman);
     destroyShader(&shader);
 
-    printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tAverage FPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
+    printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tAverage FPS: %f\n", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 
     glfwTerminate();
     return 0;
@@ -182,32 +186,28 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt, float runtim
     int d = glfwGetKey(window, GLFW_KEY_D);
     int t = glfwGetKey(window, GLFW_KEY_T);
     
-    int p = glfwGetKey(window, GLFW_KEY_P);
+    int i = glfwGetKey(window, GLFW_KEY_I);
     int f = glfwGetKey(window, GLFW_KEY_F);
     int up = glfwGetKey(window, GLFW_KEY_UP);
     int dn = glfwGetKey(window, GLFW_KEY_DOWN);
+    int left = glfwGetKey(window, GLFW_KEY_LEFT);
+    int right = glfwGetKey(window, GLFW_KEY_RIGHT);
 
     //quit when escape is pressed
     if(escape == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1U);
 
-
-    float acl = 50;
     if(a == GLFW_PRESS) {
         translateCamera(cam, cam_left, delta_time);
-        mouse->vel.x -= acl * dt;
     }
     if(d == GLFW_PRESS) {
         translateCamera(cam, cam_right, delta_time);
-        mouse->vel.x += acl * dt;
     }
     if(w == GLFW_PRESS) {
         translateCamera(cam, cam_up, delta_time);
-        mouse->vel.y -= acl * dt;
     }
     if(s == GLFW_PRESS) {
         translateCamera(cam, cam_down, delta_time);
-        mouse->vel.y += acl * dt;
     }
 
     if(t == GLFW_PRESS && !t_pressed) {
@@ -225,11 +225,12 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt, float runtim
         t_pressed = 0;
     }
 
+    // used for fake "debouncing"...
     static double press_time = 0;
-    if(p == GLFW_PRESS && glfwGetTime() - press_time > 1) {
-        printf("c: x: %.2f\ty: %.2f\n", mouse->pos.x, mouse->pos.y);
-        printf("p pressed\n");
+    if(i == GLFW_PRESS && glfwGetTime() - press_time > 1) {
+        printf("i pressed\n");
         printf("spawn_rate: %.2f circles per second\n", spawn_rate);
+        printf("using scheduler: %d\n", scheduler);
         fflush(stdout);
         press_time = glfwGetTime();
     }
@@ -263,8 +264,17 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt, float runtim
         }
     }
 
-    // delay till our time slot is used up
-    while(glfwGetTime() - start_time < runtime);
+    if(left == GLFW_PRESS && glfwGetTime() - press_time > 1) {
+        press_time = glfwGetTime();
+        scheduler --;
+        if(scheduler < 0) {
+            scheduler = NUM_SCHEDULERS - 1;
+        }
+    }
+    if(right == GLFW_PRESS && glfwGetTime() - press_time > 1) {
+        press_time = glfwGetTime();
+        scheduler = (scheduler + 1) % NUM_SCHEDULERS;
+    }
 
 }
 
@@ -353,10 +363,5 @@ void updateGameState(struct List *objects, float runtime) {
         y_var = rand() % y_var - y_var / 2;
         addCircle(objects, SCREEN_WIDTH / 2 + x_var, 100 + y_var, 0, 0, 7.5, 1);
         spawn_debt -= 1.0f;
-        printf("adding circle\n");
-        printf("new length: %d\n", objects->length);
     }
-
-    // delay till our time slot is used up
-    while(glfwGetTime() - start_time < runtime);
 }
