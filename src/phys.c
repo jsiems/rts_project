@@ -13,7 +13,7 @@ static int rect_tex_id = 0;
 static int renderer_initialized = 0;
 
 // Always present forces
-static float gravity = 100;
+static float gravity = 80;
 
 // PRIVATE PROTOS
 float dist(float x1, float y1, float x2, float y2);
@@ -51,6 +51,7 @@ struct Node *addCircle(struct List *objects, float x, float y, float xv, float y
     c.pos.y = y;
     c.vel.x = xv;
     c.vel.y = yv;
+    c.explosive = 0;
 
     c.radius = radius;
     c.color.x = 1.0f;
@@ -175,6 +176,7 @@ int updatePhysics(struct List *objects, float dt) {
         other = objects->front;
         while(other != 0) {
             if(other != node) {
+                for(int i = 0; i < 2000; i ++);
                 if(node->data_type == CIRC_TYPE && other->data_type == CIRC_TYPE) {
                     struct Manifold m;
                     m.a = node->data;
@@ -189,7 +191,6 @@ int updatePhysics(struct List *objects, float dt) {
                     m.a = node->data;
                     m.b = other->data;
                     if(isCollidingCircVRect(&m)) {
-                        fflush(stdout);
                         collideCircVRect(&m);
                         posCorCircVRect(&m);
                     }
@@ -325,6 +326,10 @@ int isCollidingCircVRect(struct Manifold *m) {
 
     d = sqrt(d);
 
+    if(d < 0.000000001 || isnan(d)) {
+        d = 0.0001;
+    }
+
     if(inside) {
         m->norm.x = (-1 * normal.x) / d;
         m->norm.y = (-1 * normal.y) / d;
@@ -333,6 +338,11 @@ int isCollidingCircVRect(struct Manifold *m) {
         m->norm.x = normal.x / d;
         m->norm.y = normal.y / d;
         m->penetration = c->radius - d;
+    }
+
+    if(isnan(m->norm.x) || isnan(m->norm.y)) {
+        m->norm.x = 1.0f;
+        m->norm.y = 0.0f;
     }
 
     return 1;
@@ -356,6 +366,9 @@ int collideCirc(struct Manifold *m) {
     rv.y = b->vel.y - a->vel.y;
 
     float vel_norm = rv.x * m->norm.x + rv.y * m->norm.y;
+    if(a->explosive || b->explosive) {
+        vel_norm -= 250;
+    }
 
     // do not collide if velocities are separating
     if(vel_norm > 0) {

@@ -5,6 +5,7 @@
 #include <string.h>
 
 struct List {
+    int length;
     struct Node *front;
 };
 

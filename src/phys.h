@@ -36,6 +36,7 @@ struct Circle {
     float mass;
     float inv_mass;    // calculate in init
     float restitution; // == bounciness
+    int explosive;
     
 };
 

@@ -3,6 +3,7 @@
 
 int initList(struct List *l) {
     l->front = 0;
+    l->length = 0;
 
     return 0;
 }
@@ -40,6 +41,8 @@ struct Node *insertNode(struct List *l, void *data, int data_length, int data_ty
         new->next = 0;
     }
 
+    l->length ++;
+
     return new;
 }
 
@@ -59,6 +62,8 @@ int removeNode(struct List *l, struct Node *node) {
     }
     free(node->data);
     free(node);
+
+    l->length --;
 
     return 0;
 }

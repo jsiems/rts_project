@@ -43,9 +43,9 @@ struct Camera cam;
 
 struct Circle *mouse;
 
-int fps_limit = 144;
+int fps_limit = 60;
 
-float spawn_rate = 1; // how many circles to spawn per second
+float spawn_rate = 10; // how many circles to spawn per second
 float last_spawn_time = 0;
 
 int main() {
@@ -95,12 +95,15 @@ int main() {
 
     // add the mouse
     mouse = (struct Circle *)(addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0, 20, 0))->data;
+    mouse->explosive = 1;
     // still objects
-    addRect(&objects, 20, 100, 20, SCREEN_HEIGHT - 200);   // left box
-    addRect(&objects, SCREEN_WIDTH - 40, 100, 20, SCREEN_HEIGHT - 200);   // right box
-    addRect(&objects, 150, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 300, 100);   // center box
-    addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 125, 0, 0, 100, 0);
-    addCircle(&objects, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 0, 0, 75, 0);
+    addRect(&objects, 20, 100, 20, SCREEN_HEIGHT - 100);   // left box
+    addRect(&objects, SCREEN_WIDTH - 40, 100, 20, SCREEN_HEIGHT - 100);   // right box
+    addRect(&objects, 150, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 300, 100);   // center box
+    addCircle(&objects, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 125, 0, 0, 100, 0);   // middle circle
+    addCircle(&objects, SCREEN_WIDTH / 8, SCREEN_HEIGHT / 4, 0, 0, 75, 0);      
+    addCircle(&objects, 7 * SCREEN_WIDTH / 8, SCREEN_HEIGHT / 4, 0, 0, 75, 0);
+    addCircle(&objects, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 0, 0, 75, 0);      
     addCircle(&objects, 3 * SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 0, 0, 75, 0);
 
     last_spawn_time = glfwGetTime();
@@ -137,11 +140,11 @@ int main() {
         if(glfwGetTime() - last_spawn_time > spawn_period) {
             while(glfwGetTime() - last_spawn_time > spawn_period) {
                 last_spawn_time +=  spawn_period;
-                int x_var = 800;
+                int x_var = 3 * SCREEN_WIDTH / 4;
                 int y_var = 100;
                 x_var = rand() % x_var - x_var / 2;
                 y_var = rand() % y_var - y_var / 2;
-                addCircle(&objects, SCREEN_WIDTH / 2 + x_var, 100 + y_var, 0, 0, 10, 1);
+                addCircle(&objects, SCREEN_WIDTH / 2 + x_var, 100 + y_var, 0, 0, 7.5, 1);
             }
             last_spawn_time = glfwGetTime();
         }
@@ -180,21 +183,21 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt) {
         glfwSetWindowShouldClose(window, 1U);
 
 
-    float acl = 1;
+    float acl = 50;
     if(a == GLFW_PRESS) {
-        //translateCamera(cam, cam_left, delta_time);
+        translateCamera(cam, cam_left, delta_time);
         mouse->vel.x -= acl * dt;
     }
     if(d == GLFW_PRESS) {
-        //translateCamera(cam, cam_right, delta_time);
+        translateCamera(cam, cam_right, delta_time);
         mouse->vel.x += acl * dt;
     }
     if(w == GLFW_PRESS) {
-        //translateCamera(cam, cam_up, delta_time);
+        translateCamera(cam, cam_up, delta_time);
         mouse->vel.y -= acl * dt;
     }
     if(s == GLFW_PRESS) {
-        //translateCamera(cam, cam_down, delta_time);
+        translateCamera(cam, cam_down, delta_time);
         mouse->vel.y += acl * dt;
     }
 
@@ -217,6 +220,7 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt) {
     if(p == GLFW_PRESS && glfwGetTime() - press_time > 1) {
         printf("c: x: %.2f\ty: %.2f\n", mouse->pos.x, mouse->pos.y);
         printf("p pressed\n");
+        printf("spawn_rate: %.2f circles per second\n", spawn_rate);
         fflush(stdout);
         press_time = glfwGetTime();
     }
@@ -240,11 +244,11 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt) {
     }
 
     if(up == GLFW_PRESS) {
-        spawn_rate += 0.1;
+        spawn_rate += 0.5;
     }
 
     if(dn == GLFW_PRESS) {
-        spawn_rate -= 0.1;
+        spawn_rate -= 0.5;
         if(spawn_rate <= 0) {
             spawn_rate = 0;
         }
@@ -293,7 +297,7 @@ GLFWwindow *initializeWindow() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "TITLE", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Circle Physics", NULL, NULL);
 
     if(window == NULL) {
         printf("Error creating window\n");
