@@ -14,6 +14,8 @@ struct Shader {
 //returns 1 is successful, 0 if not
 uint8_t initializeShader(struct Shader *shdr, const char *vertex_filename, const char *fragment_filename);
 
+void destroyShader(struct Shader *shdr);
+
 void setInt(struct Shader *shdr, const char *name, int data);
 
 void setFloat(struct Shader *shdr, const char *name, float data);

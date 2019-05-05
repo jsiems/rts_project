@@ -106,6 +106,10 @@ uint8_t initializeShader(struct Shader *shdr, const char *vertex_filename, const
     return 1;
 }
 
+void destroyShader(struct Shader *shdr) {
+    glDeleteProgram(shdr->id);
+}
+
 //private, only used to get location of uniform
 int32_t getUnifLoc(struct Shader *shdr, const char *name) {\
     int32_t location;

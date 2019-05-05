@@ -158,7 +158,9 @@ int main() {
         glfwPollEvents();
     }
 
+    destroyList(&objects);
     destroyTexMan(&texman);
+    destroyShader(&shader);
 
     printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tAverage FPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 
