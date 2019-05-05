@@ -21,6 +21,10 @@ float distSquared(float x1, float y1, float x2, float y2);
 float lengthV2(struct v2 *v);
 float lengthV2Squared(struct v2 *v);
 
+// static states
+struct Node *render_node = 0;
+struct Node *phys_node = 0;
+
 // must be called before any circles are added
 int initPhysRenderer(struct TexMan *texman, struct Shader *shdr) {
 
@@ -67,6 +71,8 @@ struct Node *addCircle(struct List *objects, float x, float y, float xv, float y
     }
     c.restitution = 0.7;
 
+    printf("adding node at x: %.2f\ty: %.2f\n", x, y);
+
     new = insertNode(objects, &c, sizeof(struct Circle), CIRC_TYPE);
 
     return new;
@@ -94,24 +100,38 @@ int addRect(struct List *objects, float x, float y, float l, float h) {
     return 0;
 }
 
-int drawObjects(struct List *objects) {
-    struct Node *node;
-    node = objects->front;
-    while(node != 0) {
+int drawObjects(struct List *objects, float runtime) {
+    struct Node *start_node;
+    float start_time = glfwGetTime();
 
-        if(node->data_type == CIRC_TYPE) {
-            drawCircle((struct Circle *)node->data);
+    if(render_node == 0) {
+        render_node = objects->front;
+    }
+    start_node = render_node->prev;
+
+    while(render_node != start_node && glfwGetTime() - start_time < runtime) {
+        if(render_node->data_type == CIRC_TYPE) {
+            drawCircle((struct Circle *)render_node->data);
         }
-        else if(node->data_type == RECT_TYPE) {
-            drawRect((struct Rect *)node->data);
+        else if(render_node->data_type == RECT_TYPE) {
+            drawRect((struct Rect *)render_node->data);
         }
         else {
-            printf("DRAW OBJECTS ERROR: Unkown type given: %d\n", node->data_type);
+            printf("DRAW OBJECTS ERROR: Unkown type given: %d\n", render_node->data_type);
             exit(1);
         }
 
-        node = node->next;
+        render_node = render_node->next;
+        if(render_node == 0) {
+            render_node = objects->front;
+        }
+        if(start_node == 0) {
+            start_node = objects->front;
+        }
     }
+
+    // delay till our time slot is used up
+    while(glfwGetTime() - start_time < runtime);
 
     return 0;
 }
@@ -162,6 +182,8 @@ int updateCircle(struct Circle *c, float dt) {
     // if offscreen, return 1
     if(c->pos.x + c->radius < 0 || c->pos.x - c->radius > SCREEN_WIDTH
         || c->pos.y + c->radius < 0 || c->pos.y - c->radius > SCREEN_HEIGHT) {
+        printf("in update, this circle is off screen\n");
+        printf("x: %.2f\ty: %.2f\n", c->pos.x, c->pos.y);
         return 1;
     }
 
@@ -169,26 +191,32 @@ int updateCircle(struct Circle *c, float dt) {
 }
 
 // updates physics of all these objects
-int updatePhysics(struct List *objects, float dt) {
-    struct Node *node, *other;
-    node = objects->front;
-    while(node != 0) {
+int updatePhysics(struct List *objects, float runtime) {
+    struct Node *start_node, *other;
+    float start_time = glfwGetTime();
+
+    if(phys_node == 0) {
+        phys_node = objects->front;
+    }
+    start_node = phys_node->prev;
+
+    while(phys_node != start_node && glfwGetTime() - start_time < runtime) {
         other = objects->front;
         while(other != 0) {
-            if(other != node) {
+            if(other != phys_node) {
                 for(int i = 0; i < 2000; i ++);
-                if(node->data_type == CIRC_TYPE && other->data_type == CIRC_TYPE) {
+                if(phys_node->data_type == CIRC_TYPE && other->data_type == CIRC_TYPE) {
                     struct Manifold m;
-                    m.a = node->data;
+                    m.a = phys_node->data;
                     m.b = other->data;
                     if(isCollidingCircVCirc(&m)){
                         collideCirc(&m);
                         posCorCircVCirc(&m);
                     }
                 }
-                if(node->data_type == CIRC_TYPE && other->data_type == RECT_TYPE) {
+                if(phys_node->data_type == CIRC_TYPE && other->data_type == RECT_TYPE) {
                     struct Manifold m;
-                    m.a = node->data;
+                    m.a = phys_node->data;
                     m.b = other->data;
                     if(isCollidingCircVRect(&m)) {
                         collideCircVRect(&m);
@@ -198,17 +226,43 @@ int updatePhysics(struct List *objects, float dt) {
             }
             other = other->next;
         }
-        if(node->data_type == CIRC_TYPE) {
-            if(updateCircle((struct Circle *)node->data, dt)) {
-                struct Node *temp = node;
-                node = node->next;
+        if(phys_node->data_type == CIRC_TYPE) {
+            float dt = glfwGetTime() - ((struct Circle *)phys_node->data)->last_update_time;
+            if(updateCircle((struct Circle *)phys_node->data, dt)) {
+                struct Node *temp = phys_node;
+                // update render_node if it is being removed
+                if(phys_node == render_node) {
+                    render_node = phys_node->next;
+                    if(render_node == 0) {
+                        render_node = objects->front;
+                    }
+                }
+                phys_node = phys_node->next;
+                if(phys_node == 0) {
+                    phys_node = objects->front;
+                }
+                printf("REMOVING NODE\n");
+                printf("x: %.2f\ty: %.2f\n", ((struct Circle *)phys_node->data)->pos.x, ((struct Circle *)phys_node->data)->pos.y);
                 removeNode(objects, temp);
                 continue;
             }
+            else {
+                ((struct Circle *)phys_node->data)->last_update_time = glfwGetTime();
+            }
         }
 
-        node = node->next;
+        phys_node = phys_node->next;
+        if(phys_node == 0) {
+            phys_node = objects->front;
+        }
+        if(start_node == 0) {
+            start_node = objects->front;
+        }
     }
+
+    // delay till our time slot is used up
+    while(glfwGetTime() - start_time < runtime);
+
     return 0;
 }
 

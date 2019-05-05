@@ -14,6 +14,8 @@
 // Inspiration:
 // https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
 
+extern double glfwGetTime();
+
 struct v2 {
     float x;
     float y;
@@ -37,6 +39,8 @@ struct Circle {
     float inv_mass;    // calculate in init
     float restitution; // == bounciness
     int explosive;
+
+    float last_update_time;
     
 };
 
@@ -70,7 +74,7 @@ int addRect(struct List *objects, float x, float y, float l, float h);
 
 // Rendering stuff
 // draws all objecs in list to the screen
-int drawObjects(struct List *objects);
+int drawObjects(struct List *objects, float runtime);
 int drawCircle(struct Circle *c);
 int drawRect(struct Rect *r);
 
@@ -80,7 +84,7 @@ int drawRect(struct Rect *r);
 
 // returns 1 if this circle is offscreen, 0 otherwise
 int updateCircle(struct Circle *c, float dt);
-int updatePhysics(struct List *objects, float dt);
+int updatePhysics(struct List *objects, float runtime);
 int isCollidingCircVCirc(struct Manifold *m);
 int isCollidingCircVRect(struct Manifold *m);
 int collideCirc(struct Manifold *m);
