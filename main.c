@@ -46,7 +46,7 @@ struct Circle *mouse;
 
 int fps_limit = 60;
 
-float spawn_rate = 10;          // how many circles to spawn per second
+float spawn_rate = 1;          // how many circles to spawn per second
 float spawn_debt = 0.0f;        // how many circles should have been spawned
 float last_spawn_check = 0.0f;  // last time spawn_debt resolved
 
@@ -56,7 +56,7 @@ int physics_priority = 20;
 int render_priority = 2;
 
 #define NUM_SCHEDULERS 2
-int scheduler = 1;
+int scheduler = 0;
 
 int main() {
     printf("running!\n");
@@ -155,7 +155,6 @@ int main() {
             updatePhysics(&objects, physics_time);
             drawObjects(&objects, render_time);
         }
-        
 
         // more rendering commands
         glfwSwapBuffers(window);
@@ -254,11 +253,11 @@ void processInput(GLFWwindow *window, struct Camera *cam, float dt, float runtim
     }
 
     if(up == GLFW_PRESS) {
-        spawn_rate += 0.5;
+        spawn_rate += 0.1;
     }
 
     if(dn == GLFW_PRESS) {
-        spawn_rate -= 0.5;
+        spawn_rate -= 0.1;
         if(spawn_rate <= 0) {
             spawn_rate = 0;
         }
